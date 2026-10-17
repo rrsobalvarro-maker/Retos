@@ -63,6 +63,13 @@ def atender_siguiente():
 
     return solicitud
 
+def consultar_siguiente():
+    if cola_pendientes:
+        return cola_pendientes[0]
+    else:
+        return None
+
+
 
 def deshacer_ultima_atencion():
     if not pila_historial:
@@ -80,9 +87,10 @@ def ejecutar_menu():
         print("\n========== MENÚ PRINCIPAL ==========")
         print("1. Registrar solicitud")
         print("2. Atender siguiente")
-        print("3. Deshacer última atención")
-        print("4. Mostrar estado")
-        print("5. Salir")
+        print("3. Consultar siguiente")
+        print("4. Deshacer última atención")
+        print("5. Mostrar estado")
+        print("6. Salir")
         print("====================================")
 
         opcion = input("Seleccione una opción: ").strip()
@@ -111,6 +119,19 @@ def ejecutar_menu():
                 print("\nNo hay solicitudes pendientes para atender.")
 
         elif opcion == "3":
+            resultado = consultar_siguiente()
+
+            if resultado:
+                print("\nEl siguiente en consultar:")
+                print("ID:",resultado["id"])
+                print("Cliente:",resultado["cliente"])
+                print("Estado: ",resultado["estado"])
+                print("Asunto:",resultado["asunto"])
+            else:
+                print("\nNo hay solicitudes restantes")
+
+
+        elif opcion == "4":
             resultado = deshacer_ultima_atencion()
 
             if resultado:
@@ -121,10 +142,10 @@ def ejecutar_menu():
             else:
                 print("\nNo hay atenciones para deshacer.")
 
-        elif opcion == "4":
+        elif opcion == "5":
             mostrar_estado()
 
-        elif opcion == "5":
+        elif opcion == "6":
             print("\nSaliendo del sistema. ¡Hasta luego!")
             break
 
