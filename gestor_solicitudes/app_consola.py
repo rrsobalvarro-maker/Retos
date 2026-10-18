@@ -69,6 +69,23 @@ def consultar_siguiente():
     else:
         return None
 
+def buscar_solicitud(id_solicitud):
+    for solicitud in cola_pendientes:
+        if solicitud["id"] == id_solicitud:
+            return solicitud, "pendientes"
+
+    for solicitud in pila_historial:
+        if solicitud["id"] == id_solicitud:
+            return solicitud, "historial"
+
+    return None
+
+def cancelar_solicitud(id_solicitud):
+    if cola_pendientes:
+        for solicitud in cola_pendientes:
+            return 
+        
+
 
 
 def deshacer_ultima_atencion():
@@ -88,9 +105,11 @@ def ejecutar_menu():
         print("1. Registrar solicitud")
         print("2. Atender siguiente")
         print("3. Consultar siguiente")
-        print("4. Deshacer última atención")
-        print("5. Mostrar estado")
-        print("6. Salir")
+        print("4. Buscar Solicitud")
+        print("5.Cancelar solicitud")
+        print("6. Deshacer última atención")
+        print("7. Mostrar estado")
+        print("8. Salir")
         print("====================================")
 
         opcion = input("Seleccione una opción: ").strip()
@@ -130,8 +149,23 @@ def ejecutar_menu():
             else:
                 print("\nNo hay solicitudes restantes")
 
-
         elif opcion == "4":
+            resultado = buscar_solicitud(int(input("Ingrese el id de la solicitud: ")))
+            if resultado:
+                solicitud, ubicacion = resultado
+                print("\nLa solicitud buscada es:")
+                print("ID:",solicitud["id"])
+                print("Cliente",solicitud["cliente"])
+                print("Estado: ",solicitud["estado"])
+                print("Asunto:",solicitud["asunto"])
+                print("Ubicacion",ubicacion)
+            else:
+                print("\nNo existe esa solicitud")   
+
+                    
+
+
+        elif opcion == "6":
             resultado = deshacer_ultima_atencion()
 
             if resultado:
@@ -142,10 +176,10 @@ def ejecutar_menu():
             else:
                 print("\nNo hay atenciones para deshacer.")
 
-        elif opcion == "5":
+        elif opcion == "7":
             mostrar_estado()
 
-        elif opcion == "6":
+        elif opcion == "8":
             print("\nSaliendo del sistema. ¡Hasta luego!")
             break
 
