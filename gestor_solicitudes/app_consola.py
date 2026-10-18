@@ -34,11 +34,28 @@ def mostrar_estado():
     print("========================================")
 
 
+def obtener_estadisticas():
+    pendientes = len(cola_pendientes)
+    atendidas = len(pila_historial)
+    total = pendientes + atendidas
+
+    return {
+        "pendientes": pendientes,
+        "atendidas": atendidas,
+        "total": total
+    }
+
+
 def registrar_solicitud(cliente, asunto):
     global siguiente_id
 
     if not cliente.strip() or not asunto.strip():
         return None
+
+    for solicitud in cola_pendientes:
+        if (solicitud["cliente"].strip().lower() == cliente.strip().lower()
+                and solicitud["asunto"].strip().lower() == asunto.strip().lower()):
+            return None
 
     solicitud = {
         "id": siguiente_id,
@@ -63,11 +80,13 @@ def atender_siguiente():
 
     return solicitud
 
+
 def consultar_siguiente():
     if cola_pendientes:
         return cola_pendientes[0]
     else:
         return None
+
 
 def buscar_solicitud(id_solicitud):
     for solicitud in cola_pendientes:
@@ -80,14 +99,15 @@ def buscar_solicitud(id_solicitud):
 
     return None
 
-def cancelar_solicitud(id_solicitud):
-        for solicitud in cola_pendientes:
-            if solicitud["id"] == id_solicitud:
-                cola_pendientes.remove(solicitud)
-                return solicitud
-        return None
-        
 
+# CORREGIDO: nombre solicitado en el reto
+def cancelar_pendiente(id_solicitud):
+    for solicitud in cola_pendientes:
+        if solicitud["id"] == id_solicitud:
+            cola_pendientes.remove(solicitud)
+            return solicitud
+
+    return None
 
 
 def deshacer_ultima_atencion():
@@ -101,9 +121,10 @@ def deshacer_ultima_atencion():
     return solicitud
 
 
+# CORREGIDO: valida que sea un entero positivo
 def deshacer_varias(cantidad):
-    if cantidad <= 0:
-        print("\nError: debe ingresar una cantidad mayor que cero.")
+    if type(cantidad) != int or cantidad <= 0:
+        print("\nError: debe ingresar una cantidad entera mayor que cero.")
         return 0
 
     recuperadas = 0
@@ -126,7 +147,6 @@ def deshacer_varias(cantidad):
     return recuperadas
 
 
-
 def ejecutar_menu():
     while True:
         print("\n========== MENÚ PRINCIPAL ==========")
@@ -138,7 +158,8 @@ def ejecutar_menu():
         print("6. Deshacer última atención")
         print("7. Deshacer varias atenciones")
         print("8. Mostrar estado")
-        print("9. Salir")
+        print("9. Estadisticas")
+        print("10. Salir")
         print("====================================")
 
         opcion = input("Seleccione una opción: ").strip()
@@ -152,8 +173,10 @@ def ejecutar_menu():
             if resultado:
                 print("\nSolicitud registrada correctamente.")
                 print("ID asignado:", resultado["id"])
-            else:
+            elif not cliente.strip() or not asunto.strip():
                 print("\nError: el cliente y el asunto son obligatorios.")
+            else:
+                print("\nYa existe una solicitud pendiente con ese cliente y asunto.")
 
         elif opcion == "2":
             resultado = atender_siguiente()
@@ -171,37 +194,50 @@ def ejecutar_menu():
 
             if resultado:
                 print("\nEl siguiente en consultar:")
-                print("ID:",resultado["id"])
-                print("Cliente:",resultado["cliente"])
-                print("Estado: ",resultado["estado"])
-                print("Asunto:",resultado["asunto"])
+                print("ID:", resultado["id"])
+                print("Cliente:", resultado["cliente"])
+                print("Estado:", resultado["estado"])
+                print("Asunto:", resultado["asunto"])
             else:
-                print("\nNo hay solicitudes restantes")
+                print("\nNo hay solicitudes restantes.")
 
         elif opcion == "4":
-            resultado = buscar_solicitud(int(input("Ingrese el id de la solicitud: ")))
-            if resultado:
-                solicitud, ubicacion = resultado
-                print("\nLa solicitud buscada es:")
-                print("ID:",solicitud["id"])
-                print("Cliente:",solicitud["cliente"])
-                print("Estado: ",solicitud["estado"])
-                print("Asunto:",solicitud["asunto"])
-                print("Ubicacion",ubicacion)
-            else:
-                print("\nNo existe esa solicitud")   
+            try:
+                id_solicitud = int(input("Ingrese el ID de la solicitud: "))
+                resultado = buscar_solicitud(id_solicitud)
+
+                if resultado:
+                    solicitud, ubicacion = resultado
+                    print("\nLa solicitud buscada es:")
+                    print("ID:", solicitud["id"])
+                    print("Cliente:", solicitud["cliente"])
+                    print("Estado:", solicitud["estado"])
+                    print("Asunto:", solicitud["asunto"])
+                    print("Ubicación:", ubicacion)
+                else:
+                    print("\nNo existe esa solicitud.")
+
+            except ValueError:
+                print("\nError: debe ingresar un ID entero válido.")
 
         elif opcion == "5":
-            resultado = cancelar_solicitud(int(input("Ingrese el ID de la solicitud que desea cancelar: "))) 
-            if resultado:
-                print("\nSolicitud cancelada correctamente")
-                print("ID:",resultado["id"])
-                print("CLiente:",resultado["cliente"])
-                print("Estado:",resultado["estado"])
-                print("Asunto:",resultado["asunto"])
-            else:
-                print("Esa solicitud no se encuentra entre los pendientes")
+            try:
+                id_solicitud = int(
+                    input("Ingrese el ID de la solicitud que desea cancelar: ")
+                )
+                resultado = cancelar_pendiente(id_solicitud)
 
+                if resultado:
+                    print("\nSolicitud cancelada correctamente.")
+                    print("ID:", resultado["id"])
+                    print("Cliente:", resultado["cliente"])
+                    print("Estado:", resultado["estado"])
+                    print("Asunto:", resultado["asunto"])
+                else:
+                    print("\nEsa solicitud no se encuentra entre los pendientes.")
+
+            except ValueError:
+                print("\nError: debe ingresar un ID entero válido.")
 
         elif opcion == "6":
             resultado = deshacer_ultima_atencion()
@@ -216,21 +252,27 @@ def ejecutar_menu():
 
         elif opcion == "7":
             try:
-             cantidad = int(input("Ingrese cuántas atenciones desea deshacer: "))
-             deshacer_varias(cantidad)
+                cantidad = int(input("Ingrese cuántas atenciones desea deshacer: "))
+                deshacer_varias(cantidad)
             except ValueError:
-             print("\nError: debe ingresar un número entero válido.")
-
+                print("\nError: debe ingresar un número entero válido.")
 
         elif opcion == "8":
             mostrar_estado()
 
         elif opcion == "9":
+            estadisticas = obtener_estadisticas()
+            print("\n========== ESTADÍSTICAS ==========")
+            print("Solicitudes pendientes:", estadisticas["pendientes"])
+            print("Atenciones en historial:", estadisticas["atendidas"])
+            print("Total de solicitudes únicas:", estadisticas["total"])
+
+        elif opcion == "10":
             print("\nSaliendo del sistema. ¡Hasta luego!")
             break
 
         else:
-            print("\nOpción inválida. Seleccione un número del 1 al 5.")
+            print("\nOpción inválida. Seleccione un número del 1 al 10.")
 
 
 if __name__ == "__main__":
